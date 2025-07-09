@@ -1,0 +1,36 @@
+# Ignore build files
+/build/
+*.o
+*.so
+*.a
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Ignore compiled binaries
+*.out
+*.exe
+
+# Ignore coverage reports
+coverage/
+*.gcda
+*.gcno
+
+# Ignore dependency directories
+node_modules/
+vendor/
+
+# Ignore sensitive files
+.env
+.env.local
+.env.*.local

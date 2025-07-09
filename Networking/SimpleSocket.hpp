@@ -5,10 +5,26 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <iostream>
-namespace SimpleSocket {
-    private:
+namespace HDE {
+    class SimpleSocket 
+    {
+        private:
 
-    struct sockaddr
+            struct sockaddr_in address;
+            int sock;
+            int connection;
+
+        public: 
+            SimpleSocket(int domain, int service, int protocol, int port, u_long interface);
+
+            virtual int connect_to_network(int sock, struct sockaddr_in adress )=0;
+
+            void test_connection(int);
+            struct sockaddr_in get_address() const;
+            int get_socket() const ;
+            int get_connection() const;
+
+    };
 
 }
 
