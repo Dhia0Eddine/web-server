@@ -23,6 +23,11 @@ namespace HDE {
             struct sockaddr_in get_address() const;
             int get_socket() const ;
             int get_connection() const;
+            
+            // setters
+            void set_address(const struct sockaddr_in& addr);
+            void set_socket(int s) ;
+            void set_connection(int conn) ;
 
     };
 

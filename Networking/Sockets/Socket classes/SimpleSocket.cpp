@@ -14,9 +14,7 @@ HDE::SimpleSocket::SimpleSocket(int domain, int service, int protocol, int port,
     // Check if the socket was created successfully
     test_connection(sock);
     // Bind the socket to the address
-    connection = connect_to_network(sock, address);
-    // Check if the connection was successful
-    test_connection(connection);
+
 }
 void HDE::SimpleSocket::test_connection(int to_be_tested) {
     if (to_be_tested < 0) {
@@ -35,4 +33,15 @@ int HDE::SimpleSocket::get_socket() const {
 }
 int HDE::SimpleSocket::get_connection() const {
     return connection;
+}
+
+//setters
+void HDE::SimpleSocket::set_address(const struct sockaddr_in& addr) {
+    address = addr;
+}       
+void HDE::SimpleSocket::set_socket(int s) {
+    sock = s;
+}
+void HDE::SimpleSocket::set_connection(int conn) {
+    connection = conn;
 }
