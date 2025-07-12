@@ -1,6 +1,8 @@
 #include "TestServer.hpp"
 #include <string>
 #include <iostream>
+#include "HTTPRequest.hpp"
+
 HDE::TestServer::TestServer() : SimpleServer(AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY, 10) {
    launch();
 }
@@ -27,10 +29,23 @@ void HDE::TestServer::accepter() {
         std::cout << "Received:\n" << buffer << std::endl;
     }
 }
-
 void HDE::TestServer::handler() {
-    // For now, no processing; could parse HTTP request here later.
+    // Parse the request from the buffer using our structured parser
+    HTTPRequest req = HTTPRequest::parse(std::string(buffer));
+
+    // Log structured information
+    std::cout << "----- Parsed HTTP Request -----\n";
+    std::cout << "Method: " << req.method << "\n";
+    std::cout << "Path: " << req.path << "\n";
+    std::cout << "Version: " << req.http_version << "\n";
+    std::cout << "Headers:\n";
+    for (const auto& [key, value] : req.headers) {
+        std::cout << "  " << key << ": " << value << "\n";
+    }
+    std::cout << "Body:\n" << req.body << "\n";
+    std::cout << "--------------------------------\n";
 }
+
 
 void HDE::TestServer::responder() {
     std::string response =
