@@ -6,14 +6,26 @@ using namespace HDE;
 
 HTTPRequest HTTPRequest::parse(const std::string& raw_request) {
     HTTPRequest req;
-    std::istringstream stream(raw_request);
-    std::string line;
+    std::istringstream stream(raw_request); // Create a stream from the raw request string
+    std::string line; // Variable to hold each line of the request
 
     // Parse request line
-    if (std::getline(stream, line)) {
-        line.erase(std::remove(line.end()-1, line.end(), '\r'), line.end());
-        std::istringstream line_stream(line);
-        line_stream >> req.method >> req.path >> req.http_version;
+    if (std::getline(stream, line)) { 
+        line.erase(std::remove(line.end()-1, line.end(), '\r'), line.end()); // Remove trailing carriage return 
+        std::istringstream line_stream(line); // Create a stream for the request line
+        // Extract method, path, and HTTP version
+        if (line_stream.eof()) {
+            throw std::runtime_error("Invalid request line: " + line);
+        }
+        if (line_stream.peek() == ' ') {
+            throw std::runtime_error("Invalid request line: " + line);
+        }   
+
+        line_stream >> req.method >> req.path >> req.http_version; // Read method, path, and HTTP version
+      
+        if (line_stream.fail()) {
+            throw std::runtime_error("Failed to parse request line: " + line);
+        }
     }
 
     // Parse headers

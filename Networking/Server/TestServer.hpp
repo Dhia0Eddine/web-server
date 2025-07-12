@@ -8,6 +8,7 @@
 #include <sys/types.h> // For socket types
 #include <sys/socket.h> // For socket functions
 #include <netinet/in.h> // For sockaddr_in
+#include "HTTPRequest.hpp"
 
 namespace HDE {
     class TestServer : public SimpleServer {
@@ -25,6 +26,8 @@ namespace HDE {
             void responder() override;
             char buffer[30000]; // Buffer for reading data
             int client_socket; // Socket for the client connection
+            HTTPRequest current_request; // Current HTTP request
+            
         };
 }
 
