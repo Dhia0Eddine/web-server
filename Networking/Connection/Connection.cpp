@@ -5,10 +5,11 @@
 #include <cstring>
 #include <sys/socket.h>
 #include <thread>
+
 using namespace HDE;
 
-Connection::Connection(int client_socket)
-    : client_socket(client_socket) {
+Connection::Connection(int client_socket, Router& router)
+    : client_socket(client_socket), router(router) {
     memset(buffer, 0, sizeof(buffer));
 }
 
@@ -33,7 +34,6 @@ void Connection::read_request() {
 }
 
 void Connection::handle_request() {
-    // Print parsed request for debugging
     std::cout << "----- Parsed HTTP Request -----\n";
     std::cout << "Method: " << request.method << "\n";
     std::cout << "Path: " << request.path << "\n";
@@ -44,33 +44,13 @@ void Connection::handle_request() {
     }
     std::cout << "Body:\n" << request.body << "\n";
     std::cout << "--------------------------------\n";
-    if (request.path == "/hello") {
-        std::this_thread::sleep_for(std::chrono::seconds(20));
-    } else if (request.path == "/time") {
-        std::this_thread::sleep_for(std::chrono::seconds(6));
-    } else if (request.path == "/json") {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
 }
 
 void Connection::send_response() {
-    std::string body;
-    std::string content_type = "text/plain";
-    int status_code = 200;
-    std::string status_text = "OK";
+    auto [status_code, body] = router.handle_request(request);
 
-    if (request.path == "/hello") {
-        body = "Hello from HDE TestServer!";
-    } else if (request.path == "/time") {
-        body = "Server time: " + std::to_string(time(nullptr));
-    } else if (request.path == "/json") {
-        content_type = "application/json";
-        body = R"({"status": "success", "message": "Hello, JSON!"})";
-    } else {
-        status_code = 404;
-        status_text = "Not Found";
-        body = "404 - Resource not found.";
-    }
+    std::string status_text = (status_code == 200) ? "OK" : "Not Found";
+    std::string content_type = (request.path == "/json") ? "application/json" : "text/plain";
 
     std::string response =
         "HTTP/1.1 " + std::to_string(status_code) + " " + status_text + "\r\n" +

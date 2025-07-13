@@ -2,6 +2,7 @@
 #define HDE_CONNECTION_HPP
 
 #include "../Server/HTTPRequest.hpp"
+#include "../Router/Router.hpp"
 
 #include <netinet/in.h>
 #include <string>
@@ -13,9 +14,10 @@ private:
     int client_socket;
     char buffer[4096];
     HTTPRequest request;
+    Router& router;
 
 public:
-    Connection(int client_socket);
+    Connection(int client_socket, Router& router);
     void process();
 
 private:

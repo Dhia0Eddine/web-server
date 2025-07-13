@@ -10,6 +10,7 @@
 #include <netinet/in.h> // For sockaddr_in
 #include "HTTPRequest.hpp"
 #include "../ThreadPool/ThreadPool.hpp"
+#include "../Router/Router.hpp"
 
 namespace HDE {
     class TestServer : public SimpleServer {
@@ -23,6 +24,7 @@ namespace HDE {
         private:
         
             ThreadPool pool; // Thread pool for handling requests
+            Router router; // Router for handling HTTP requests
 
         };
 }

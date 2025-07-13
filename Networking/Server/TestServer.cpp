@@ -10,6 +10,18 @@ TestServer::TestServer()
     : SimpleServer(AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY, 10),
       pool(4) // Create a ThreadPool with 4 threads
 {
+    router.add_route("/hello", [](const HTTPRequest&) {
+    return std::make_pair(200, "Hello from HDE TestServer!");
+    });
+
+    router.add_route("/time", [](const HTTPRequest&) {
+        return std::make_pair(200, "Server time: " + std::to_string(time(nullptr)));
+    });
+
+    router.add_route("/json", [](const HTTPRequest&) {
+        return std::make_pair(200, R"({"status": "success", "message": "Hello, JSON!"})");
+    });
+
     launch();
 }
 
@@ -33,8 +45,8 @@ void TestServer::launch() {
 
         std::cout << "Client connected." << std::endl;
 
-        pool.enqueue([client_sock]() {
-            HDE::Connection conn(client_sock);
+        pool.enqueue([client_sock, this]() {
+            HDE::Connection conn(client_sock, router);
             conn.process();
         });
     }
