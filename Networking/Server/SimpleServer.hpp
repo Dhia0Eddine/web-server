@@ -6,10 +6,6 @@ namespace HDE {
     class SimpleServer {
         private:
             ListeningSocket* socket;
-            virtual void accepter()=0;
-            virtual void handler()=0;
-            virtual void responder()=0;
-
         public:
 
             // Constructor to create a simple server

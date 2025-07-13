@@ -1,0 +1,29 @@
+#ifndef HDE_CONNECTION_HPP
+#define HDE_CONNECTION_HPP
+
+#include "../Server/HTTPRequest.hpp"
+
+#include <netinet/in.h>
+#include <string>
+
+namespace HDE {
+
+class Connection {
+private:
+    int client_socket;
+    char buffer[4096];
+    HTTPRequest request;
+
+public:
+    Connection(int client_socket);
+    void process();
+
+private:
+    void read_request();
+    void handle_request();
+    void send_response();
+};
+
+} // namespace HDE
+
+#endif // HDE_CONNECTION_HPP

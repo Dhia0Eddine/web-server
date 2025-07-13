@@ -1,103 +1,41 @@
 #include "TestServer.hpp"
-#include <string>
+#include "../Connection/Connection.hpp"
 #include <iostream>
-#include "HTTPRequest.hpp"
+#include <netinet/in.h>
+#include <unistd.h>
 
-HDE::TestServer::TestServer() : SimpleServer(AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY, 10), pool(4) {
-   launch();
-}
-void HDE::TestServer::accepter() {
-    // Only read data from the already accepted client_socket
-    ssize_t bytes_read = read(client_socket, buffer, sizeof(buffer) - 1);
-    if (bytes_read < 0) {
-        perror("read");
-    } else {
-        buffer[bytes_read] = '\0';
-        std::cout << "Received:\n" << buffer << std::endl;
-    }
+using namespace HDE;
+
+TestServer::TestServer()
+    : SimpleServer(AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY, 10),
+      pool(4) // Create a ThreadPool with 4 threads
+{
+    launch();
 }
 
-void HDE::TestServer::handler() {
-    // Parse request and store in class field
-    current_request = HTTPRequest::parse(std::string(buffer));
-
-    // Log for debug
-    std::cout << "----- Parsed HTTP Request -----\n";
-    std::cout << "Method: " << current_request.method << "\n";
-    std::cout << "Path: " << current_request.path << "\n";
-    std::cout << "Version: " << current_request.http_version << "\n";
-    std::cout << "Headers:\n";
-    for (const auto& [key, value] : current_request.headers) {
-        std::cout << "  " << key << ": " << value << "\n";
-    }
-    std::cout << "Body:\n" << current_request.body << "\n";
-    std::cout << "--------------------------------\n";
-
-    // Sleep for demonstration 
-    if (current_request.path == "/hello") {
-        std::this_thread::sleep_for(std::chrono::seconds(20));
-    }else if (current_request.path == "/time") {
-        std::this_thread::sleep_for(std::chrono::seconds(6));
-    }else if (current_request.path == "/json") {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-}
-
-void HDE::TestServer::responder() {
-    std::string body;
-    std::string content_type = "text/plain";
-    int status_code = 200;
-    std::string status_text = "OK";
-
-    if (current_request.path == "/hello") {
-        body = "Hello from HDE TestServer!";
-    } else if (current_request.path == "/time") {
-        body = "Server time: " + std::to_string(time(nullptr));
-    } else if (current_request.path == "/json") {
-        content_type = "application/json";
-        body = R"({"status": "success", "message": "Hello, JSON!"})";
-    } else {
-        status_code = 404;
-        status_text = "Not Found";
-        body = "404 - Resource not found.";
-    }
-
-    std::string response =
-        "HTTP/1.1 " + std::to_string(status_code) + " " + status_text + "\r\n" +
-        "Content-Type: " + content_type + "\r\n" +
-        "Content-Length: " + std::to_string(body.size()) + "\r\n" +
-        "Connection: close\r\n" +
-        "\r\n" +
-        body;
-
-    ssize_t bytes_sent = write(client_socket, response.c_str(), response.size());
-    if (bytes_sent < 0) {
-        perror("write");
-    }
-
-    close(client_socket);
-    std::cout << "Response sent to client and connection closed.\n";
-}
-
-
-void HDE::TestServer::launch() {
+void TestServer::launch() {
     std::cout << "Server is running..." << std::endl;
 
     while (true) {
         struct sockaddr_in client_addr;
         socklen_t addr_len = sizeof(client_addr);
-        int client_sock = accept(get_socket()->get_socket(), (struct sockaddr*)&client_addr, &addr_len);
-        if (client_sock < 0) { perror("accept"); continue; }
 
-        pool.enqueue([this, client_sock]() {
-            this->handle_client(client_sock);
+        int client_sock = accept(
+            get_socket()->get_socket(),
+            (struct sockaddr*)&client_addr,
+            &addr_len
+        );
+
+        if (client_sock < 0) {
+            perror("accept");
+            continue;
+        }
+
+        std::cout << "Client connected." << std::endl;
+
+        pool.enqueue([client_sock]() {
+            HDE::Connection conn(client_sock);
+            conn.process();
         });
     }
-}
-
-void HDE::TestServer::handle_client(int client_socket) {
-    this->client_socket = client_socket;
-    accepter();
-    handler();
-    responder();
 }
