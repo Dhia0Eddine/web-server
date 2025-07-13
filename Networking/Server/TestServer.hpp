@@ -9,6 +9,7 @@
 #include <sys/socket.h> // For socket functions
 #include <netinet/in.h> // For sockaddr_in
 #include "HTTPRequest.hpp"
+#include "../ThreadPool/ThreadPool.hpp"
 
 namespace HDE {
     class TestServer : public SimpleServer {
@@ -20,6 +21,7 @@ namespace HDE {
             void launch() override;
 
         private:
+        
             // Implement the required methods for the server
             void accepter() override;
             void handler() override;
@@ -27,6 +29,9 @@ namespace HDE {
             char buffer[30000]; // Buffer for reading data
             int client_socket; // Socket for the client connection
             HTTPRequest current_request; // Current HTTP request
+            ThreadPool pool; // Thread pool for handling requests
+            void handle_client(int client_socket);
+
             
         };
 }

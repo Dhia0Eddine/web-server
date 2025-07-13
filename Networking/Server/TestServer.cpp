@@ -3,24 +3,11 @@
 #include <iostream>
 #include "HTTPRequest.hpp"
 
-HDE::TestServer::TestServer() : SimpleServer(AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY, 10) {
+HDE::TestServer::TestServer() : SimpleServer(AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY, 10), pool(4) {
    launch();
 }
 void HDE::TestServer::accepter() {
-    struct sockaddr_in client_addr = get_socket()->get_address();
-    printf(client_addr.sin_family == AF_INET ? "IPv4" : "IPv6");
-    std::cout << " - Accepting connections on port " << ntohs(client_addr.sin_port) << std::endl;
-
-    socklen_t addr_len = sizeof(client_addr);
-
-   
-    client_socket = accept(get_socket()->get_socket(), (struct sockaddr*)&client_addr, &addr_len);
-    if (client_socket < 0) {
-        perror("accept");
-        return;
-    }
-    std::cout << "Client connected." << std::endl;
-
+    // Only read data from the already accepted client_socket
     ssize_t bytes_read = read(client_socket, buffer, sizeof(buffer) - 1);
     if (bytes_read < 0) {
         perror("read");
@@ -45,6 +32,15 @@ void HDE::TestServer::handler() {
     }
     std::cout << "Body:\n" << current_request.body << "\n";
     std::cout << "--------------------------------\n";
+
+    // Sleep for demonstration 
+    if (current_request.path == "/hello") {
+        std::this_thread::sleep_for(std::chrono::seconds(20));
+    }else if (current_request.path == "/time") {
+        std::this_thread::sleep_for(std::chrono::seconds(6));
+    }else if (current_request.path == "/json") {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
 }
 
 void HDE::TestServer::responder() {
@@ -88,10 +84,20 @@ void HDE::TestServer::launch() {
     std::cout << "Server is running..." << std::endl;
 
     while (true) {
-        std::cout << "Waiting for a connection..." << std::endl;
+        struct sockaddr_in client_addr;
+        socklen_t addr_len = sizeof(client_addr);
+        int client_sock = accept(get_socket()->get_socket(), (struct sockaddr*)&client_addr, &addr_len);
+        if (client_sock < 0) { perror("accept"); continue; }
 
-        accepter();  // Accept a new connection
-        handler();   // Process request (empty for now)
-        responder(); // Send response
+        pool.enqueue([this, client_sock]() {
+            this->handle_client(client_sock);
+        });
     }
+}
+
+void HDE::TestServer::handle_client(int client_socket) {
+    this->client_socket = client_socket;
+    accepter();
+    handler();
+    responder();
 }
