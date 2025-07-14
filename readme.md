@@ -1,126 +1,147 @@
-# Web Server Project
+# HDE Lightweight C++ Web Server
 
-A C++ web server implementation built from scratch using socket programming. This project demonstrates object-oriented design principles and network programming concepts.
+Welcome! This is **my personal educational project** to **build a real, functioning HTTP web server from scratch in C++** to deeply understand how networking, HTTP parsing, concurrency, and clean system design work.
+
+---
+
+## What is this project?
+
+It’s a **tiny but complete web server** that:
+
+- Accepts **HTTP requests** (like when you use `curl` or your browser).
+- Parses the request to extract **method, path, headers, body**.
+- Uses a **Router** to map paths like `/hello` to your handler code.
+- Builds and sends back **clean HTTP responses** to the client.
+- Uses a **ThreadPool** to handle **multiple clients concurrently**.
+
+All using **pure C++ and raw sockets** (no external HTTP libraries), so you learn **exactly what’s happening under the hood.**
+
+---
+
+## How does this web server work?
+
+Here’s the **life cycle of a client request:**
+
+1. **Socket Creation**:
+- We create a TCP socket using `socket()`.
+- We bind it to a port (`8080`) and `INADDR_ANY` so it listens on all interfaces.
+- We start `listen()` to wait for clients.
+
+2. **Accepting Connections**:
+- When a client connects, the server calls `accept()` to get a **new socket** representing that client.
+
+3. **ThreadPool Handling**:
+- Instead of blocking the server for one client, we push the connection to a **ThreadPool**.
+- The pool has a fixed number of worker threads, each picking up client connections and handling them in parallel.
+
+4. **Connection Handling**:
+- Each connection reads the raw HTTP request into a buffer.
+- We parse it into an `HTTPRequest` object with `method`, `path`, `headers`, `body`.
+
+5. **Routing**:
+- The `Router` looks at the `path` and decides which handler function to call (e.g., `/hello`, `/time`).
+- The handler generates a `RouteResult` with:
+  - Status code (`200`, `404`, etc.)
+  - Body
+  - Content-Type
+  - Additional headers (if needed)
+
+6. **Responding**:
+- We convert the `RouteResult` into a full HTTP response string (`HTTP/1.1 200 OK\r\n...`).
+- We send it back to the client with `write()`.
+- We close the client socket, freeing resources.
+
+---
 
 ## Project Structure
 
 ```
 web-server/
-├── Networking/
-│   ├── Sockets/
-│   │   ├── Socket classes/
-│   │   │   ├── SimpleSocket.hpp/cpp
-│   │   │   ├── BindingSocket.hpp/cpp
-│   │   │   ├── ConnectingSocket.hpp/cpp
-│   │   │   └── ListeningSocket.hpp/cpp
-│   │   └── hdelibc-sockets.hpp
-│   ├── Server/
-│   │   ├── SimpleServer.hpp/cpp
-│   │   ├── TestServer.hpp/cpp
-│   │   └── test.cpp
-│   └── hdelibc-networking.hpp
-├── .gitignore
+├── include/              # All .hpp headers, organized clearly
+│   ├── networking/
+│   └── http/
+├── src/                  # All .cpp implementation files
+│   ├── sockets/
+│   ├── server/
+│   ├── connection/
+│   ├── router/
+│   └── threadpool/
+├── build/                # Where build outputs go
+├── CMakeLists.txt        # For modern build system
 └── README.md
 ```
 
-## Current Classes and Functions
+---
 
-### Socket Layer
+## Why do we use CMake?
 
-#### `SimpleSocket` (Base Class)
-- **Purpose**: Abstract base class for all socket types
-- **Functions**:
-  - `SimpleSocket(int domain, int service, int protocol, int port, u_long interface)` - Constructor
-  - `test_connection(int socket_result)` - Validates socket connection
-  - `get_socket()` - Returns socket file descriptor
-  - `get_address()` - Returns socket address structure
+- **CMake is a cross-platform build system** that generates platform-specific build files (Makefiles, Ninja, Visual Studio solutions, etc.).
+- It **automates dependency handling** between files, avoiding manual compilation headaches.
+- It **scales well as your project grows** with more files, tests, and dependencies.
+- CMake allows **clean out-of-source builds**, keeping your `build/` folder separate from your `src/`.
 
-#### `BindingSocket` (Inherits from SimpleSocket)
-- **Purpose**: Handles server-side socket binding to specific addresses
-- **Functions**:
-  - `BindingSocket(int domain, int service, int protocol, int port, u_long interface)` - Constructor
-  - `connect_to_network(int sock, struct sockaddr_in address)` - Binds socket to address
+---
 
-#### `ListeningSocket` (Inherits from BindingSocket)
-- **Purpose**: Creates listening sockets for incoming client connections
-- **Functions**:
-  - `ListeningSocket(int domain, int service, int protocol, int port, u_long interface, int backlog)` - Constructor
-  - `start_listening()` - Puts socket in listening mode
-  - `connect_to_network()` - Override for listening behavior
+## Building and Running
 
-#### `ConnectingSocket` (Inherits from SimpleSocket)
-- **Purpose**: Handles client-side socket connections
-- **Functions**:
-  - `ConnectingSocket(int domain, int service, int protocol, int port, u_long interface)` - Constructor
-  - `connect_to_network(int sock, struct sockaddr_in address)` - Connects to remote server
-
-### Server Layer
-
-#### `SimpleServer` (Abstract Base Class)
-- **Purpose**: Defines interface for all server implementations
-- **Functions**:
-  - `SimpleServer(int domain, int service, int protocol, int port, u_long interface)` - Constructor
-  - `accepter()` - Pure virtual function for accepting connections
-  - `handler()` - Pure virtual function for processing requests
-  - `responder()` - Pure virtual function for sending responses
-  - `launch()` - Pure virtual function for starting server
-  - `get_socket()` - Returns pointer to listening socket
-
-#### `TestServer` (Inherits from SimpleServer)
-- **Purpose**: Basic HTTP server implementation for testing
-- **Functions**:
-  - `TestServer()` - Default constructor (creates server on port 8080)
-  - `accepter()` - Accepts client connections and reads requests
-  - `handler()` - Processes incoming HTTP requests
-  - `responder()` - Sends HTTP responses to clients
-  - `launch()` - Starts server loop
-
-## Current Features
-
-- Basic socket creation and management
-- Server socket binding and listening
-- Client connection acceptance
-- Basic HTTP request/response handling
-- Object-oriented socket abstraction
-- Error handling with proper cleanup
-- Cross-platform socket compatibility
-
-### Compilation
+### 1. Clone and enter the directory:
 ```bash
-cd web-server/Networking/Server
-g++ -o test test.cpp TestServer.cpp SimpleServer.cpp \
-    ../Sockets/Socket\ classes/SimpleSocket.cpp \
-    ../Sockets/Socket\ classes/BindingSocket.cpp \
-    ../Sockets/Socket\ classes/ListeningSocket.cpp \
-    -I../ -std=c++17
+git clone https://github.com/yourusername/web-server.git
+cd web-server
 ```
 
-### Running
+### 2. Build with CMake:
 ```bash
-./test
+mkdir build
+cd build
+cmake ..
+make
+./web_server
 ```
 
-The server will start listening on port 8080. You can test it using:
+---
+
+## Testing
+
+Open a new terminal:
+
 ```bash
-curl http://localhost:8080
+curl http://localhost:8080/hello
+curl http://localhost:8080/time
+curl http://localhost:8080/json
 ```
 
-## Future Improvements
+You will see parsed requests and server responses printed to your server terminal.
 
-### Short-term (Next Release)
-- [ ] **Multi-threading Support**: Handle multiple client connections simultaneously
-- [ ] **HTTP Parser**: Proper HTTP request parsing (headers, methods, body)
+---
 
-## Architecture Goals
+## What have I learned so far?
 
-### Design Principles
-- **Modularity**: Each component serves a specific purpose
-- **Extensibility**: Easy to add new features without breaking existing code
-- **Performance**: Optimized for high-throughput scenarios
-- **Maintainability**: Clean, well-documented code structure
+- How TCP sockets work practically in C++.  
+- How to parse and structure HTTP requests manually.  
+- Building a **clean router system** for handling endpoints.  
+- Managing concurrency using a **ThreadPool**.  
+- Organizing a **real project structure** with `include/`, `src/`, and CMake.  
+- Building reusable components like `Router`, `Connection`, and `HTTPResponse`.
 
+---
 
+## Next Steps
 
+- [ ] Add structured **logging** with colored output for clarity.
+- [ ] Add **unit tests** for HTTP parsing and router logic.
+- [ ] Extend routing to handle **HTTP methods (GET, POST, etc.)**.
+- [ ] Add support for **static file serving** (images, CSS, JS).
+- [ ] Add **persistent connection (keep-alive)** support.
+- [ ] Optionally add **TLS (HTTPS)** in the future.
 
+---
 
-**Note**: This is an educational project demonstrating socket programming and web server architecture. For production use, consider established frameworks like Flask, Express, or Spring Boot. 
+## Why this project?
+
+Because building your own HTTP server **demystifies how the internet actually works**, and makes you **deeply comfortable with low-level system programming in C++**.
+
+---
+
+Happy hacking, learning, and exploring!  
+– Dhia Eddine

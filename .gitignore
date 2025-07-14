@@ -1,36 +1,102 @@
-# Ignore build files
-/build/
-*.o
-*.so
-*.a
+# Build directories
+build/
+bin/
+dist/
+out/
 
-# Ignore IDE files
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Make build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Compiled binaries
+web_server
+test_server
+*.exe
+*.out
+
+# IDE files
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Ignore system files
+# System files
 .DS_Store
 Thumbs.db
-
-# Ignore logs and temporary files
-*.log
 *.tmp
-*.swp
 
-# Ignore compiled binaries
-*.out
-*.exe
+# Logs and temporary files
+*.log
+*.pid
+core
+*.core
 
-# Ignore coverage reports
-coverage/
-*.gcda
-*.gcno
-
-# Ignore dependency directories
+# Package managers
 node_modules/
 vendor/
 
-# Ignore sensitive files
+# Environment files
 .env
 .env.local
 .env.*.local
+
+# Debug files
+*.dSYM/
+*.pdb
+
+# Coverage reports
+coverage/
+*.gcda
+*.gcno
+*.lcov
+
+# Documentation build
+docs/_build/
+docs/build/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Dependency directories
+third_party/
+external/
+libs/
+
+# Archive files
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Generated documentation
+html/
+latex/
+man/
+
+# Editor swap files
+.*.swp
+.*.swo
+
+# Valgrind output
+*.valgrind
+
+# GDB files
+.gdb_history
+
+# Profiling data
+*.prof
+gmon.out
