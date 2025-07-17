@@ -40,3 +40,5 @@ public:
 }
 
 #endif // LOGGER_HPP
+
+// 
