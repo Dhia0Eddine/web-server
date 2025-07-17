@@ -1,4 +1,5 @@
 #include "../../../include/networking/sockets/ConnectingSocket.hpp"
+#include "../../../include/utils/logger.hpp"
 
 #include <cstring>
 
@@ -14,7 +15,7 @@ HDE::ConnectingSocket::ConnectingSocket(int domain, int service, int protocol, i
 int HDE::ConnectingSocket::connect_to_network(int sock, struct sockaddr_in address) {
     // Connect the socket to the specified address and port
     if (connect(sock, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        std::cerr << "Connection failed: " << strerror(errno) << std::endl;
+        Logger::log("Connection failed: " + std::string(strerror(errno)), Logger::ERROR);
         return -1; // Return -1 on failure
     }
     return 0; // Return 0 on success

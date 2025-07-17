@@ -1,4 +1,5 @@
 #include "../../../include/networking/sockets/BindingSocket.hpp"
+#include "../../../include/utils/logger.hpp"
 #include <cstring>
 HDE::BindingSocket::BindingSocket(int domain, int service, int protocol, int port, u_long interface)
     : SimpleSocket(domain, service, protocol, port, interface) {
@@ -16,7 +17,7 @@ HDE::BindingSocket::BindingSocket(int domain, int service, int protocol, int por
 int HDE::BindingSocket::connect_to_network(int sock, struct sockaddr_in address) {
     // Bind the socket to the specified address and port
     if (bind(sock, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        std::cerr << "Binding failed: " << strerror(errno) << std::endl;
+        Logger::log("Binding failed: " + std::string(strerror(errno)), Logger::ERROR);
         return -1; // Return -1 on failure
     }
     return 0; // Return 0 on success

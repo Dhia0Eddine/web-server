@@ -1,5 +1,6 @@
 #include "../../include/networking/server/TestServer.hpp"     // Fixed path
 #include "../../include/networking/connection/Connection.hpp" // Fixed path
+#include "../../include/utils/logger.hpp"
 #include <iostream>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -26,7 +27,7 @@ TestServer::TestServer()
 }
 
 void TestServer::launch() {
-    std::cout << "Server is running..." << std::endl;
+    Logger::log("Server is running...", Logger::INFO);
 
     while (true) {
         struct sockaddr_in client_addr;
@@ -39,11 +40,11 @@ void TestServer::launch() {
         );
 
         if (client_sock < 0) {
-            perror("accept");
+            Logger::log("Accept failed: " + std::string(strerror(errno)), Logger::ERROR);
             continue;
         }
 
-        std::cout << "Client connected." << std::endl;
+        Logger::log("Client connected", Logger::INFO);
 
         pool.enqueue([client_sock, this]() {
             HDE::Connection conn(client_sock, router);

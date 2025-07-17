@@ -1,4 +1,5 @@
 #include "../../../include/networking/sockets/SimpleSocket.hpp"
+#include "../../../include/utils/logger.hpp"
 #include <cstring>
 
 HDE::SimpleSocket::SimpleSocket(int domain, int service, int protocol, int port, u_long interface) {
@@ -18,7 +19,7 @@ HDE::SimpleSocket::SimpleSocket(int domain, int service, int protocol, int port,
 }
 void HDE::SimpleSocket::test_connection(int to_be_tested) {
     if (to_be_tested < 0) {
-        std::cerr << "Connection failed: " << strerror(errno) << std::endl;
+        Logger::log("Connection failed: " + std::string(strerror(errno)), Logger::ERROR);
         exit(EXIT_FAILURE);
     }
 }
