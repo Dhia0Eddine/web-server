@@ -15,12 +15,13 @@
 #include "../threadpool/ThreadPool.hpp"
 #include "../router/Router.hpp"
 #include "../../utils/logger.hpp"
+#include "../../utils/Config.hpp"
 
 namespace HDE {
     class TestServer : public SimpleServer {
         public:
-            // Constructor to create a test server
-            TestServer();
+            // Constructor to create a test server with optional config file
+            TestServer(const std::string& config_file = "server.conf");
 
             // Method to start the server
             void launch() override;
@@ -33,8 +34,12 @@ namespace HDE {
                 running.store(false);
             }
         
+            Config config; // Configuration handler (must be first to initialize before others)
             ThreadPool pool; // Thread pool for handling requests
             Router router; // Router for handling HTTP requests
+            
+            // Helper method to setup routes
+            void setup_routes();
 
         };
 }

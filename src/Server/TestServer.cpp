@@ -15,10 +15,26 @@ using namespace HDE;
 // Static member definition
 std::atomic<bool> TestServer::running{true};
 
-TestServer::TestServer()
-    : SimpleServer(AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY, 10),
-      pool(4) // Create a ThreadPool with 4 threads
+TestServer::TestServer(const std::string& config_file)
+    : config(config_file),
+      SimpleServer(AF_INET, SOCK_STREAM, 0, 
+                  config.get_int("server.port", 8080), 
+                  INADDR_ANY, 
+                  config.get_int("server.backlog", 10)),
+      pool(config.get_int("threadpool.size", 4))
 {
+    Logger::log("=== Server Configuration ===", Logger::INFO);
+    Logger::log("Port: " + std::to_string(config.get_int("server.port", 8080)), Logger::INFO);
+    Logger::log("Backlog: " + std::to_string(config.get_int("server.backlog", 10)), Logger::INFO);
+    Logger::log("Thread Pool Size: " + std::to_string(config.get_int("threadpool.size", 4)), Logger::INFO);
+    Logger::log("Timeout: " + std::to_string(config.get_int("server.timeout", 30)), Logger::INFO);
+    Logger::log("============================", Logger::INFO);
+    
+    setup_routes();
+    launch();
+}
+
+void TestServer::setup_routes() {
     // GET routes
     router.get("/hello", [](const HTTPRequest&) {
         return Router::RouteResult{200, "OK", "Hello from GET!", "text/plain", {}};
@@ -56,9 +72,8 @@ TestServer::TestServer()
             R"({"message": "User deleted successfully"})", 
             "application/json", {}};
     });
-
-    launch();
 }
+
 
 void TestServer::launch() {
     // Set up signal handlers
@@ -77,7 +92,7 @@ void TestServer::launch() {
         FD_SET(get_socket()->get_socket(), &read_fds);
         
         struct timeval timeout;
-        timeout.tv_sec = 1;  // 1 second timeout
+        timeout.tv_sec = 1;  // 1 second timeout for signal checking
         timeout.tv_usec = 0;
         
         int select_result = select(get_socket()->get_socket() + 1, &read_fds, nullptr, nullptr, &timeout);

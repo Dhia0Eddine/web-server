@@ -31,6 +31,7 @@ set(NETWORKING_SOURCES
     src/Connection/Connection.cpp
     src/Router/Router.cpp
     src/ThreadPool/ThreadPool.cpp
+    src/utils/Config.cpp
 )
 
 set(ALL_SOURCES
