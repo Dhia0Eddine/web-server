@@ -47,6 +47,51 @@ target_link_libraries(hde_networking Threads::Threads)
 add_executable(web_server test.cpp)
 target_link_libraries(web_server hde_networking Threads::Threads)
 
+# Testing setup
+option(BUILD_TESTS "Build the tests" ON)
+
+if(BUILD_TESTS)
+    # Try to find Catch2
+    find_package(Catch2 3 QUIET)
+    
+    if(NOT Catch2_FOUND)
+        # If Catch2 is not found, try to use FetchContent to download it
+        include(FetchContent)
+        FetchContent_Declare(
+            Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG        v3.4.0 # or any tag you want
+        )
+        FetchContent_MakeAvailable(Catch2)
+        
+        # Add Catch2 to the module path
+        list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+    endif()
+
+    # Enable testing
+    enable_testing()
+
+    # Add test executable
+    file(GLOB TEST_SOURCES "tests/unit/*.cpp" "tests/integration/*.cpp")
+    
+    if(TEST_SOURCES)
+        add_executable(run_tests ${TEST_SOURCES})
+        target_link_libraries(run_tests PRIVATE hde_networking Catch2::Catch2WithMain Threads::Threads)
+        target_include_directories(run_tests PRIVATE include tests)
+        target_compile_features(run_tests PRIVATE cxx_std_17)
+
+        # Discover and add tests
+        if(TARGET Catch2::Catch2)
+            include(Catch)
+            catch_discover_tests(run_tests)
+        else()
+            add_test(NAME AllTests COMMAND run_tests)
+        endif()
+    else()
+        message(WARNING "No test sources found in tests/ directory")
+    endif()
+endif()
+
 # Install targets
 install(TARGETS web_server
     RUNTIME DESTINATION bin
