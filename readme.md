@@ -73,14 +73,16 @@ web-server/
 │   │   ├── router/       # HTTP routing with method support
 │   │   └── threadpool/   # Thread pool for concurrency
 │   ├── http/             # HTTP request/response parsing
-│   └── utils/            # Logger and utilities
+│   └── utils/            # Logger, Config, and utilities
 ├── src/                  # All .cpp implementation files
 │   ├── Sockets/
 │   ├── Server/
 │   ├── Connection/
 │   ├── Router/
-│   └── ThreadPool/
+│   ├── ThreadPool/
+│   └── utils/            # Configuration system
 ├── build/                # Where build outputs go
+├── server.conf           # Configuration file
 ├── CMakeLists.txt        # For modern build system
 └── README.md
 ```
@@ -89,26 +91,97 @@ web-server/
 
 ## New Features & Improvements
 
-### 🔧 **Memory Management & Resource Safety**
-- **Smart Pointers**: `SimpleServer` now uses `std::unique_ptr` instead of raw pointers
-- **RAII**: Automatic cleanup of sockets and resources
-- **Exception Safety**: Proper error handling without memory leaks
+### Memory Management & Resource Safety
+- Smart Pointers: `SimpleServer` now uses `std::unique_ptr` instead of raw pointers
+- RAII: Automatic cleanup of sockets and resources
+- Exception Safety: Proper error handling without memory leaks
 
-### 🛑 **Graceful Shutdown**
-- **Signal Handling**: Responds to `SIGINT` (Ctrl+C) and `SIGTERM`
-- **Clean Termination**: Stops accepting new connections and finishes processing existing ones
-- **Resource Cleanup**: Properly closes sockets and joins threads
+### Graceful Shutdown
+- Signal Handling: Responds to `SIGINT` (Ctrl+C) and `SIGTERM`
+- Clean Termination: Stops accepting new connections and finishes processing existing ones
+- Resource Cleanup: Properly closes sockets and joins threads
 
-### 🌐 **Full HTTP Method Support**
-- **GET**: For retrieving resources
-- **POST**: For creating new resources
-- **PUT**: For updating existing resources
-- **DELETE**: For removing resources
+### Full HTTP Method Support
+- GET: For retrieving resources
+- POST: For creating new resources
+- PUT: For updating existing resources
+- DELETE: For removing resources
 
-### 🎯 **Enhanced Router**
-- **Method-Specific Routing**: Different handlers for same path but different methods
-- **Convenience Methods**: `router.get()`, `router.post()`, `router.put()`, `router.delete_()`
-- **Backward Compatibility**: Still supports old string-based handlers
+### Enhanced Router
+- Method-Specific Routing: Different handlers for same path but different methods
+- Convenience Methods: `router.get()`, `router.post()`, `router.put()`, `router.delete_()`
+- Backward Compatibility: Still supports old string-based handlers
+
+### Configuration System
+- File-Based Configuration: Uses `server.conf` file for easy customization
+- Runtime Defaults: Sensible defaults when config file is missing
+- Flexible Settings: Configure port, thread pool size, timeouts, and more
+- Comment Support: Configuration file supports comments and various formats
+- Type Safety: Automatic type conversion for strings, integers, and booleans
+
+
+---
+
+## Configuration
+
+The server can be configured using a `server.conf` file. If no configuration file is provided, the server will use sensible defaults.
+
+### Sample Configuration File (`server.conf`):
+```ini
+# HDE Web Server Configuration File
+# Lines starting with # are comments
+# Format: key = value
+
+# Server Settings
+server.port = 8080
+server.host = 0.0.0.0
+server.backlog = 10
+
+# Thread Pool Settings
+threadpool.size = 4
+
+# Logging Settings
+logging.level = INFO
+logging.enabled = true
+
+# Performance Settings
+server.timeout = 30
+server.max_connections = 100
+
+# Security Settings
+server.enable_cors = true
+server.cors_origin = *
+
+# Static File Settings
+static.enabled = false
+static.root_dir = ./public
+static.index_file = index.html
+
+# Development Settings
+dev.hot_reload = false
+dev.debug = false
+```
+
+### Configuration Options:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `server.port` | 8080 | Port number for the server to listen on |
+| `server.backlog` | 10 | Maximum number of pending connections |
+| `threadpool.size` | 4 | Number of worker threads in the thread pool |
+| `server.timeout` | 30 | Connection timeout in seconds |
+| `server.max_connections` | 100 | Maximum concurrent connections |
+| `logging.level` | INFO | Log level (DEBUG, INFO, WARNING, ERROR) |
+| `logging.enabled` | true | Enable/disable logging |
+
+### Usage:
+```bash
+# Use default configuration
+./web_server
+
+# Use custom configuration file
+./web_server custom.conf
+```
 
 ---
 
@@ -126,10 +199,23 @@ mkdir build
 cd build
 cmake ..
 make
-./hde_networking
 ```
 
-### 3. Graceful shutdown:
+### 3. Configure the server (optional):
+```bash
+# Copy the sample configuration file
+cp ../server.conf .
+
+# Edit the configuration file
+nano server.conf
+```
+
+### 4. Run the server:
+```bash
+./web_server
+```
+
+### 5. Graceful shutdown:
 ```bash
 # Press Ctrl+C or send SIGTERM
 kill -TERM <process_id>
@@ -190,8 +276,9 @@ fetch('http://localhost:8080/users', {
 - Managing concurrency using a **ThreadPool**.  
 - **Memory management** with smart pointers and RAII.
 - **Signal handling** for graceful application shutdown.
+- **Configuration management** with file-based settings and type-safe parsing.
 - Organizing a **real project structure** with `include/`, `src/`, and CMake.  
-- Building reusable components like `Router`, `Connection`, and `HTTPResponse`.
+- Building reusable components like `Router`, `Connection`, `HTTPResponse`, and `Config`.
 - **Modern C++ practices** for safer, more maintainable code.
 
 ---
@@ -202,7 +289,7 @@ fetch('http://localhost:8080/users', {
 - [ ] Implement **static file serving** (images, CSS, JS).
 - [ ] Add **middleware system** for authentication, CORS, logging.
 - [ ] Support **HTTP/1.1 keep-alive** connections.
-- [ ] Add **configuration file** support.
+- [x] Add **configuration file** support.
 - [ ] Implement **request/response compression**.
 - [ ] Add **performance metrics** and monitoring.
 - [ ] Optionally add **TLS (HTTPS)** support.
